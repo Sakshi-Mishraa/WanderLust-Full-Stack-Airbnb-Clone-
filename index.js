@@ -72,8 +72,7 @@ const sessionOptions={
 
 //root route
 app.get("/",(req,res)=>{
-    console.log(req.session);
-    res.send("hii , i m root");
+     res.redirect("/listings");
 });
 
 //session middleware
