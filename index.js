@@ -32,7 +32,6 @@ app.use(express.urlencoded({extended:true}));
 app.use(methodOverride("_method"));
 app.engine("ejs",ejsMate);
 app.use(express.static(path.join(__dirname,"/public"))); 
-app.set('trust proxy', 1); // add at top
 //setting our database 
 const dbUrl=process.env.ATLAS_DB_URL;
 
@@ -68,8 +67,6 @@ const sessionOptions={
         expires: new Date(Date.now() + 7*24*60*60*1000),
         maxAge:7*24*60*60*1000,
         httpOnly:true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax"
     },
 };
 
