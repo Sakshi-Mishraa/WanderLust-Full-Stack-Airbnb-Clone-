@@ -70,11 +70,6 @@ const sessionOptions={
     },
 };
 
-//root route
-app.get("/",(req,res)=>{
-     res.redirect("/listings");
-});
-
 //session middleware
 app.use(session(sessionOptions));
 // flash middleware 
@@ -94,6 +89,11 @@ app.use((req,res,next)=>{
     res.locals.error=req.flash("error"); 
     res.locals.currentUser=req.user; 
     next();
+});
+
+//root route
+app.get("/",(req,res)=>{
+     res.redirect("/listings");
 });
 
 //listing routes 
