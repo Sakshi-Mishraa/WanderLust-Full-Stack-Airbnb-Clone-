@@ -1,0 +1,131 @@
+<% layout("./layouts/boilerplate")%>
+
+<body>
+
+   <div class="row">
+        <div class="col-8 offset-3">
+            <br/>
+            <h3><b><%=listing.title%></b></h3>
+        </div>
+        <div class="card col-6 offset-3 listing-card">
+           
+           <div class="image-gallery">
+                 <% for(let image of listing.image){%>
+                     <img class="gallery-img" src="<%=image.url%>" src="<%=image.url%>" alt="List Image">
+                 <%}%>
+           </div>
+
+            <div class="card-body">
+                <p class="card-text">
+                   <p><b>Owned By :</b><i> <%=listing.owner[0].username%></i></p> 
+                   <p><%=listing.description%></p> 
+                    <!-- &#8377;->this entity is used for rupess symbol 
+                    toLocalString function is used on numbers for inserting commas between the digits -->
+                    <p>&#8377;<%=Number(listing.price).toLocaleString("en-IN")%></p> 
+                    <p><%=listing.location%></p> 
+                    <p><%=listing.country%></p> 
+                </p>
+            </div>
+        </div>
+    </div>
+<!--agar currentUser hoga hii nhi(in case we are not logined and click on any listing) i.e. currentUser ki value undefined hogi (first condition is false) whch means usme _id key hogi hii nhi to currentUser._id ki v value undefined hogi , to in this case(second condition) error aana chahiye kyuki undefined ki value ko defined value se compare nhi kr sakte i.e. we cannot compare currentUser._id.equals(listing.owner[o]._id (this should return a typeError : cannot read properties of undefined (reading _'id'))) , pr yaha error nhi aa raha hai -> jab ham login nhi kr rahe rahe h aur sari listings pr click kr rahe hai ek ek kr k to dono buttons hidden hai jaisa ki ham chahte hai pr aaisa kaise possible h jab currentUser._id ki value hii undefned hai THIS IS HAPPENNING DUE TO JAVASCRIPT SHORT CIRCUIT BEHAVIOUR -->
+<%if(currentUser && currentUser._id.equals(listing.owner[0]._id)){%>
+<div class="btns offset-3"> 
+    <form method="GET" action="/listings/<%=listing._id%>/edit" >
+        <button class="btn btn-dark add-btn edit">Edit Listing</button> 
+    </form>
+
+    <form method="POST" action="/listings/<%=listing._id%>?_method=DELETE" >
+        <button class="btn btn-dark delete">Delete Listing</button> 
+    </form>
+</div>
+<%}%>
+<div class="col-8 offset-3 mb-3">
+    <hr>
+    <%if(currentUser){%>
+    <h4>Leave A review</h4>
+    <form action="/listings/<%=listing._id%>/reviews" method="POST" novalidate class="needs-validation">
+        <!-- <div class="mb-3 mt-3">
+            <label for="rating" class="form-label">Rating</label>
+            <input type="range" min="1" max="5" id="rating"name="rating" class="form-range">       
+        </div> -->
+       <div class="mb-3 mt-3">
+        <label for="rating" class="form-label">Rating</label>
+        <fieldset class="starability-slot">
+            <input type="radio" id="no-rate" class="input-no-rate" name="rating" value="1" checked aria-label="No rating." />
+            <input type="radio" id="first-rate1" name="rating" value="1" />
+            <label for="first-rate1" title="Terrible">1 star</label>
+            <input type="radio" id="first-rate2" name="rating" value="2" />
+            <label for="first-rate2" title="Not good">2 stars</label>
+            <input type="radio" id="first-rate3" name="rating" value="3" />
+            <label for="first-rate3" title="Average">3 stars</label>
+            <input type="radio" id="first-rate4" name="rating" value="4" />
+            <label for="first-rate4" title="Very good">4 stars</label>
+            <input type="radio" id="first-rate5" name="rating" value="5" />
+            <label for="first-rate5" title="Amazing">5 stars</label>
+         </fieldset>
+        </div>
+        <div class="mb-3 mt-3" >
+            <label for="comment" class="form-label">Comment</label>
+            <textarea name="comment" id="comment" cols="30" rows="5" class="form-control" required></textarea>
+            <div class="invalid-feedback">Please add some comments for review</div> 
+        </div>
+        <button class="btn btn-outline-dark">Submit</button>
+    </form>
+    <hr/>
+    <%}%>
+    
+    <%if(listing.reviews.length>0){%>
+    <div class="row">
+    <p><b>All Reviews</b></p>
+    <% for(review of listing.reviews){%>
+        <div class="card col-5 ms-3 mb-3">
+            <div class="card-body">
+                <h5 class="card-title">@<%=review.author.username%></h5>
+                <p class="starability-result card-text"data-rating="<%=review.rating%>"></p>
+                <p class="card-text"><%=review.comment%></p>
+                <!-- <p class="card-text"><%=review.rating%> stars</p> -->
+            </div>
+           <%if(currentUser && review.author._id.equals(currentUser._id)){%>
+            <form class="mb-3 mt-3" method="POST" action="/listings/<%=listing._id%>/reviews/<%=review._id%>?_method=DELETE">
+                <button class="btn btn-sm btn-dark">Delete Review</button>
+            </form>
+           <%}%>  
+        </div>
+    <%}%>
+</div>
+<%}%>
+</div>
+<div class="col-8 offset-3 mb-3">
+    <h3>Where You'll Be</h3>
+    <div id="map"></div>
+</div>
+<script>
+  const locationName ="<%=listing.location%>"
+  const apiKey = "iNJIV4PkoM1Bczlmis3V"; // Replace with your MapTiler API key
+
+  const map = new maplibregl.Map({
+    container: 'map',
+    style: `https://api.maptiler.com/maps/streets/style.json?key=${apiKey}`,
+    center: [0,0], // starting position [lng, lat]
+    zoom: 2 // starting zoom
+  });
+
+  //geocoding implementation
+  fetch(`https://api.maptiler.com/geocoding/${encodeURIComponent(locationName)}.json?key=${apiKey}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.features.length > 0) {
+        const [lng, lat] = data.features[0].center;
+
+        // Set view to the location
+        map.flyTo({ center: [lng, lat], zoom: 14 });
+
+        // Add marker
+        new maplibregl.Marker().setLngLat([lng, lat]).addTo(map);
+      } else {
+        alert("Location not found");
+      }
+    });
+</script> 
+</body>
