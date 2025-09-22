@@ -124,8 +124,8 @@ app.use((err,req,res,next)=>{
    res.status(statusCode||500).render("error.ejs",{message});
 }); 
 
-
-app.listen(8080,()=>{
+const PORT = process.env.PORT || 8080;
+app.listen(PORT,()=>{
     console.log("app is listening at port 8080");
 }); 
 
