@@ -1,7 +1,12 @@
+const path = require('path');
+if (process.env.NODE_ENV !== "production") {
+    require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+}
 //setting our database
-const mongoose=require("mongoose")
+const mongoose=require("mongoose");
+const dbUrl=process.env.ATLAS_DB_URL;
 async function main() {
-    await mongoose.connect("mongodb://127.0.0.1:27017/wanderLust");
+    await mongoose.connect(dbUrl);
   }
   main()
   .then(() => {
